@@ -1,4 +1,4 @@
-# audio_check_test2
+# audio_check
 # 音声のグラフを表示する試み
 
 import sys
