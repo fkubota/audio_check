@@ -26,19 +26,15 @@ class audio_check(QG.QMainWindow):
         self.resize(600, 600)
 
         self.isStop = 1
-        self.infline_pos = 0
+        self.infline_pos_feat = 0
+        self.infline_pos_spec = 0
         self.p_featV = []
         self.curve_featV = []
         self.infline_featV = []
         self.region_wavV = []
         self.region_id = -1
+        self.region_specV = []
 
-        # toolbar
-        self.add_region_wav = QG.QAction(QG.QIcon(script_path+'/../icon_file/plus_icon2.png'),
-                                     'resion', self)
-        self.add_region_wav.triggered.connect(self.show_region)
-        self.toolber = self.addToolBar('')
-        self.toolber.addAction(self.add_region_wav)
 
         # widget
         self.w0 = QG.QWidget()
@@ -65,7 +61,8 @@ class audio_check(QG.QMainWindow):
         self.p_wav.setLabel('bottom', 'Time', 'sec')
         self.p_wav.showGrid(x=True, y=True, alpha=0.7)
         self.curve_wav = self.p_wav.plot(pen=(255, 0, 0, 50))
-        self.infline_wav = pg.InfiniteLine(pen=(0, 0, 0), movable=True, hoverPen=(0, 0, 255))
+        self.infline_wav = pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255))
+        self.infline_wav.me = 'wav'
         self.infline_wav.sigPositionChangeFinished.connect(self.infline_changed)
         self.p_wav.addItem(self.infline_wav)
 
@@ -81,8 +78,9 @@ class audio_check(QG.QMainWindow):
             # self.p_featV[idx].setXRange(0, 200)
             self.curve_featV.append(self.p_featV[idx].plot(pen=(255, 0, 0, 100)))
             self.curve_featV[idx].id = idx
-            self.infline_featV.append(pg.InfiniteLine(pen=(0, 0, 0), movable=True, hoverPen=(0, 0, 255)))
+            self.infline_featV.append(pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255)))
             self.infline_featV[idx].sigPositionChangeFinished.connect(self.infline_changed)
+            self.infline_featV[idx].me = 'feat'
             self.p_featV[idx].addItem(self.infline_featV[idx])
 
             #region
@@ -94,6 +92,35 @@ class audio_check(QG.QMainWindow):
         self.hbox_plot_feat = QG.QHBoxLayout()
         self.hbox_plot_feat.addWidget(self.scroll)
 
+        # graph_spectorogram
+        self.w_spec = QG.QWidget()
+        self.w_spec.setWindowTitle('Spectrogram')
+        self.w_spec.resize(1000, 300)
+        self.imv = pg.ImageView()
+        self.imv.getView().setAspectLocked(False)
+        self.infline_spec = pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255))
+        self.infline_spec.me = 'spec'
+        self.infline_spec.sigPositionChangeFinished.connect(self.infline_changed)
+        self.imv.addItem(self.infline_spec)
+        self.lbl_spec0 = QG.QLabel('spectrogram')
+        self.lbl_spec1 = QG.QLabel('sample rate (spectrogram) Hz')
+        self.le_spec0 = QG.QLineEdit()
+        self.le_spec1 = QG.QLineEdit()
+        self.le_spec1.setFixedWidth(100)
+        self.le_spec1.setText(str(400))
+        self.btn_spec0 = QG.QPushButton('...')
+        self.btn_spec0.setFixedWidth(30)
+        self.btn_spec0.clicked.connect(self.get_path_spec)
+        self.hbox_spec0 = QG.QHBoxLayout()
+        self.hbox_spec0.addWidget(self.lbl_spec1)
+        self.hbox_spec0.addWidget(self.le_spec1)
+        self.hbox_spec0.addWidget(self.lbl_spec0)
+        self.hbox_spec0.addWidget(self.le_spec0)
+        self.hbox_spec0.addWidget(self.btn_spec0)
+        self.vbox_spec0 = QG.QVBoxLayout()
+        self.vbox_spec0.addWidget(self.imv)
+        self.vbox_spec0.addLayout(self.hbox_spec0)
+        self.w_spec.setLayout(self.vbox_spec0)
 
 
         # layout
@@ -116,11 +143,20 @@ class audio_check(QG.QMainWindow):
         self.w0.setLayout(self.vbox0)
 
 
-        # self.get_path_wav()
-        # self.get_path_feat()
-        self.timer()
-        # thread_obj2 = threading.Thread(target=self.play)
-        # thread_obj2.start()
+        # toolbar
+        self.add_region_wav = QG.QAction(QG.QIcon(script_path+'/../icon_file/plus_icon2.png'),
+                                         'region', self)
+        self.add_region_wav.triggered.connect(self.show_region)
+        self.add_spec = QG.QAction(QG.QIcon(script_path+'/../icon_file/plus_icon2.png'),
+                                   'spectrogram', self)
+        self.add_spec.triggered.connect(self.w_spec.show)
+        self.label_export = QG.QAction(QG.QIcon(script_path+'/../icon_file/plus_icon2.png'),
+                                   'export label', self)
+        self.label_export.triggered.connect(self.export_label)
+        self.toolber = self.addToolBar('')
+        self.toolber.addAction(self.add_region_wav)
+        self.toolber.addAction(self.add_spec)
+        self.toolber.addAction(self.label_export)
 
 
     def play(self):
@@ -149,24 +185,26 @@ class audio_check(QG.QMainWindow):
 
 
     def timer(self):
+        ratio = int(self.le_spec1.text())/4
         # self.time = self.infline_pos
         self.a = time.time()
         def change_infline():
             # print('music: ' + str(pygame.mixer.music.get_pos()))
             # self.infline_wav.setPos(self.time*44100/4)
-            self.infline_wav.setPos(self.infline_pos)
+            self.infline_wav.setPos(self.infline_pos_feat)
+            self.infline_spec.setPos(self.infline_pos_spec)
             for idx in range(34):
-                self.infline_featV[idx].setPos(self.infline_pos)
+                self.infline_featV[idx].setPos(self.infline_pos_feat)
 
-            self.infline_pos += 0.25
-            print(self.infline_pos)
+            self.infline_pos_feat += 0.25
+            self.infline_pos_spec += 0.25*ratio
             self.now = time.time()- self.a
             # print(self.now)
 
 
-        self.timer = QC.QTimer()
-        self.timer.timeout.connect(change_infline)
-        # self.timer.start(250)  # 250 ms 毎
+        self.qtimer = QC.QTimer()
+        self.qtimer.timeout.connect(change_infline)
+        self.qtimer.start(250)  # 250 ms 毎
 
 
     def thread(self):
@@ -177,7 +215,7 @@ class audio_check(QG.QMainWindow):
         self.isStop = int((self.isStop+1)%2)
         if self.isStop:
             pygame.mixer.music.stop()
-            self.timer.stop()
+            self.qtimer.stop()
             # self.timer.deleteLater()
             # self.timer.destroyed()
             self.btn_play_stop.setText('Play')
@@ -187,8 +225,7 @@ class audio_check(QG.QMainWindow):
 
 
         # pygame.mixer.music.play(1) #再生開始。1の部分を変えるとn回再生(その場合は次の行の秒数も×nすること)
-        print('inf : '+ str(self.infline_pos))
-        pygame.mixer.music.play(start = self.infline_pos)
+        pygame.mixer.music.play(start = self.infline_pos_feat)
         # pygame.mixer.music.stop()
         # pygame.mixer.music.set_pos(10)
         # pygame.mixer.music.play(-1, self.infline_pos/4)
@@ -199,7 +236,8 @@ class audio_check(QG.QMainWindow):
         # pygame.mixer.music.set_pos(1)
         # pygame.mixer.music.unpause()
 
-        self.timer.start(250)  # 250 ms 毎
+        # self.qtimer.start(250)  # 250 ms 毎
+        self.timer()
 
 
 
@@ -241,16 +279,36 @@ class audio_check(QG.QMainWindow):
             self.curve_featV[idx].setData(x, self.feat[:, idx])
             self.p_featV[idx].setXLink(self.p_featV[0])
 
+    def get_path_spec(self):
+        spec_path = '/home/fkubota/Python/app/audio_check/data/fromHoshinosan/sample_for_testing01_20181214_113823_002301-002317_right_ssft_HI-RES.pkl'
+        self.le_spec0.setText(spec_path)
+        with open(spec_path, mode='rb') as f:
+            spec = pickle.load(f).T[:,::-1]
+
+        self.imv.setImage(spec)
+
+
     def infline_changed(self):
         infline = self.sender()
+        name = infline.me
         pos = infline.pos()[0]
-        # print(infline.pos()[0])
-        # print(pos)
-        self.infline_pos = int(pos)
+        ratio = int(self.le_spec1.text())/4
+
+        if name =='spec':
+            pos_feat = pos/ratio
+            pos_spec = pos
+        else:
+            pos_spec = pos*ratio
+            pos_feat = pos
+
+        self.infline_pos_feat = int(pos_feat)
+        self.infline_pos_spec = int(pos_spec)
 
     def show_region(self):
         self.region_id += 1
         region_id = self.region_id
+
+        # wav
         self.region_wavV.append(pg.LinearRegionItem())
         region_wav = self.region_wavV[region_id]
         region_wav.me = 'wav'
@@ -258,6 +316,15 @@ class audio_check(QG.QMainWindow):
         region_wav.sigRegionChanged.connect(self.update_region)
         self.p_wav.addItem(region_wav)
 
+        # spec
+        self.region_specV.append(pg.LinearRegionItem())
+        region_spec = self.region_specV[region_id]
+        region_spec.me = 'spec'
+        region_spec.id = region_id
+        region_spec.sigRegionChanged.connect(self.update_region)
+        self.imv.addItem(region_spec)
+
+        # feat
         for idx in range(34):
             self.p_featV[idx].region_featV.append(pg.LinearRegionItem())
             region_feat = self.p_featV[idx].region_featV[region_id]
@@ -269,25 +336,56 @@ class audio_check(QG.QMainWindow):
     def update_region(self):
         region = self.sender()
         id = region.id
+        name = region.me
         left, right = region.getRegion()
+
+        ratio = int(self.le_spec1.text())/4
+        if name =='spec':
+            left_spec = left
+            right_spec = right
+            left_feat = left/ratio
+            right_feat = right/ratio
+        else:
+            left_feat = left
+            right_feat = right
+            left_spec = left*ratio
+            right_spec = right*ratio
 
         # disconnect
         self.region_wavV[id].sigRegionChanged.disconnect(self.update_region)
+        self.region_specV[id].sigRegionChanged.disconnect(self.update_region)
         for idx in range(34):
             self.p_featV[idx].region_featV[id].sigRegionChanged.disconnect(self.update_region)
 
         # update
-        self.region_wavV[id].setRegion([left, right])
+        self.region_wavV[id].setRegion([left_feat, right_feat])
+        self.region_specV[id].setRegion([left_spec, right_spec])
         for idx in range(34):
-            self.p_featV[idx].region_featV[id].setRegion([left, right])
+            self.p_featV[idx].region_featV[id].setRegion([left_feat, right_feat])
 
         # connect
         self.region_wavV[id].sigRegionChanged.connect(self.update_region)
+        self.region_specV[id].sigRegionChanged.connect(self.update_region)
         for idx in range(34):
             self.p_featV[idx].region_featV[id].sigRegionChanged.connect(self.update_region)
 
+    def export_label(self):
+        start = []
+        end = []
+        for idx, region in enumerate(self.region_wavV):
+            left, right = region.getRegion()
+            start.append(left)
+            end.append(right)
 
+        start = sorted(start)
+        end = sorted(end)
 
+        A = [start, end]
+
+        # === save feature as pickle ===
+        save_path = QG.QFileDialog.getSaveFileName(self, "Save File")  # 保存するファイル名を取得。
+        with open(save_path + '.pkl', mode='wb') as f:
+            pickle.dump(A, f)
 
 
 def main():
