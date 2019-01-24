@@ -280,7 +280,9 @@ class audio_check(QG.QMainWindow):
             self.p_featV[idx].setXLink(self.p_featV[0])
 
     def get_path_spec(self):
-        spec_path = '/home/fkubota/Python/app/audio_check/data/fromHoshinosan/sample_for_testing01_20181214_113823_002301-002317_right_ssft_HI-RES.pkl'
+        # spec_path = '/home/fkubota/Python/app/audio_check/data/fromHoshinosan/sample_for_testing01_20181214_113823_002301-002317_right_ssft_HI-RES.pkl'
+        spec_path = QG.QFileDialog.getOpenFileName(self, 'Open File', '/home/')
+        print(spec_path)
         self.le_spec0.setText(spec_path)
         with open(spec_path, mode='rb') as f:
             spec = pickle.load(f).T[:,::-1]
