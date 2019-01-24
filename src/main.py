@@ -239,6 +239,7 @@ class audio_check(QG.QMainWindow):
         for idx in range(34):
             x = np.arange(0, len(self.feat[:, idx]))/4
             self.curve_featV[idx].setData(x, self.feat[:, idx])
+            self.p_featV[idx].setXLink(self.p_featV[0])
 
     def infline_changed(self):
         infline = self.sender()
@@ -252,16 +253,40 @@ class audio_check(QG.QMainWindow):
         region_id = self.region_id
         self.region_wavV.append(pg.LinearRegionItem())
         region_wav = self.region_wavV[region_id]
-        region_wav.
+        region_wav.me = 'wav'
+        region_wav.id = region_id
+        region_wav.sigRegionChanged.connect(self.update_region)
         self.p_wav.addItem(region_wav)
 
         for idx in range(34):
             self.p_featV[idx].region_featV.append(pg.LinearRegionItem())
             region_feat = self.p_featV[idx].region_featV[region_id]
+            region_feat.me = 'feat'
+            region_feat.id = region_id
+            region_feat.sigRegionChanged.connect(self.update_region)
             self.p_featV[idx].addItem(region_feat)
 
     def update_region(self):
-        pass
+        region = self.sender()
+        id = region.id
+        left, right = region.getRegion()
+
+        # disconnect
+        self.region_wavV[id].sigRegionChanged.disconnect(self.update_region)
+        for idx in range(34):
+            self.p_featV[idx].region_featV[id].sigRegionChanged.disconnect(self.update_region)
+
+        # update
+        self.region_wavV[id].setRegion([left, right])
+        for idx in range(34):
+            self.p_featV[idx].region_featV[id].setRegion([left, right])
+
+        # connect
+        self.region_wavV[id].sigRegionChanged.connect(self.update_region)
+        for idx in range(34):
+            self.p_featV[idx].region_featV[id].sigRegionChanged.connect(self.update_region)
+
+
 
 
 
