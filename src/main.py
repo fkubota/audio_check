@@ -19,6 +19,12 @@ import os
 script_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(script_path + '/../'))
 
+feat_name = ['zcr','energy','energy_entropy','spectral_centroid','spectral_spread','spectral_entropy','spectral_flux','spectral_rolloff',
+                            'mfcc_1','mfcc_2','mfcc_3','mfcc_4','mfcc_5','mfcc_6','mfcc_7','mfcc_8','mfcc_9','mfcc_10','mfcc_11','mfcc_12','mfcc_13',
+                            'chroma_1','chroma_2','chroma_3','chroma_4','chroma_5','chroma_6','chroma_7','chroma_8','chroma_9','chroma_10','chroma_11','chroma_12','chroma_std']
+
+
+
 class audio_check(QG.QMainWindow):
     def __init__(self, parent = None):
         super(audio_check, self).__init__(parent)  # superclassのコンストラクタを使用。
@@ -75,6 +81,7 @@ class audio_check(QG.QMainWindow):
             self.p_featV.append(self.w_plot_feat.addPlot())
             self.p_featV[idx].setLabel('bottom', 'Time', 'sec')
             self.p_featV[idx].showGrid(x=True, y=True, alpha=0.7)
+            self.p_featV[idx].setLabels(left=feat_name[idx])
             # self.p_featV[idx].setXRange(0, 200)
             self.curve_featV.append(self.p_featV[idx].plot(pen=(255, 0, 0, 100)))
             self.curve_featV[idx].id = idx
