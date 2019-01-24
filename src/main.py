@@ -24,7 +24,6 @@ feat_name = ['zcr','energy','energy_entropy','spectral_centroid','spectral_sprea
                             'chroma_1','chroma_2','chroma_3','chroma_4','chroma_5','chroma_6','chroma_7','chroma_8','chroma_9','chroma_10','chroma_11','chroma_12','chroma_std']
 
 
-
 class audio_check(QG.QMainWindow):
     def __init__(self, parent = None):
         super(audio_check, self).__init__(parent)  # superclassのコンストラクタを使用。
@@ -192,7 +191,7 @@ class audio_check(QG.QMainWindow):
 
 
     def timer(self):
-        ratio = int(self.le_spec1.text())/4
+        ratio = int(self.le_spec1.text())
         # self.time = self.infline_pos
         self.a = time.time()
         def change_infline():
@@ -259,8 +258,10 @@ class audio_check(QG.QMainWindow):
         y = self.wav_file.readframes(self.wav_file.getnframes())
         # print(3, len(y))
         y = np.frombuffer(y, dtype='int16')
+        print(y.shape)
         # print(4, len(y))
         y = y[::int(44100/4)]
+        print(y.shape)
         # print(5, len(y))
         x = np.arange(0, len(y))/4
         self.curve_wav.setData(x, y)
@@ -280,7 +281,6 @@ class audio_check(QG.QMainWindow):
             self.feat = self.feat['data']
         except:
             pass
-
         for idx in range(34):
             x = np.arange(0, len(self.feat[:, idx]))/4
             self.curve_featV[idx].setData(x, self.feat[:, idx])
@@ -289,19 +289,21 @@ class audio_check(QG.QMainWindow):
     def get_path_spec(self):
         # spec_path = '/home/fkubota/Python/app/audio_check/data/fromHoshinosan/sample_for_testing01_20181214_113823_002301-002317_right_ssft_HI-RES.pkl'
         spec_path = QG.QFileDialog.getOpenFileName(self, 'Open File', '/home/')
-        print(spec_path)
+        # print(spec_path)
         self.le_spec0.setText(spec_path)
         with open(spec_path, mode='rb') as f:
             spec = pickle.load(f).T[:,::-1]
 
         self.imv.setImage(spec)
+        print(spec.shape)
 
 
     def infline_changed(self):
+        print('ok')
         infline = self.sender()
         name = infline.me
         pos = infline.pos()[0]
-        ratio = int(self.le_spec1.text())/4
+        ratio = int(self.le_spec1.text())
 
         if name =='spec':
             pos_feat = pos/ratio
@@ -348,7 +350,7 @@ class audio_check(QG.QMainWindow):
         name = region.me
         left, right = region.getRegion()
 
-        ratio = int(self.le_spec1.text())/4
+        ratio = int(self.le_spec1.text())
         if name =='spec':
             left_spec = left
             right_spec = right
@@ -388,7 +390,6 @@ class audio_check(QG.QMainWindow):
 
         start = sorted(start)
         end = sorted(end)
-
         A = [start, end]
 
         # === save feature as pickle ===
