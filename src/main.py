@@ -12,9 +12,12 @@ import pandas as pd
 import pyqtgraph as pg
 import pickle
 import pygame
+# region
 import time
 import pydub
 import os
+script_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(script_path + '/../'))
 
 class audio_check(QG.QMainWindow):
     def __init__(self, parent = None):
@@ -24,6 +27,18 @@ class audio_check(QG.QMainWindow):
 
         self.isStop = 1
         self.infline_pos = 0
+        self.p_featV = []
+        self.curve_featV = []
+        self.infline_featV = []
+        self.region_wavV = []
+        self.region_id = -1
+
+        # toolbar
+        self.add_region_wav = QG.QAction(QG.QIcon(script_path+'/../icon_file/plus_icon2.png'),
+                                     'resion', self)
+        self.add_region_wav.triggered.connect(self.show_region)
+        self.toolber = self.addToolBar('')
+        self.toolber.addAction(self.add_region_wav)
 
         # widget
         self.w0 = QG.QWidget()
@@ -54,26 +69,25 @@ class audio_check(QG.QMainWindow):
         self.infline_wav.sigPositionChangeFinished.connect(self.infline_changed)
         self.p_wav.addItem(self.infline_wav)
 
-        # region
-        # self.region = pg.LinearRegionItem()
-        # self.p_wav.addItem(self.region)
 
         # graph_feat
         self.w_plot_feat = pg.GraphicsWindow()
         self.w_plot_feat.resize(1000, 6000)
         self.w_plot_feat.setBackground('#FFFFFF00')
-        self.p_featV = []
-        self.curve_featV = []
-        self.infline_featV = []
         for idx in range(34):
             self.p_featV.append(self.w_plot_feat.addPlot())
             self.p_featV[idx].setLabel('bottom', 'Time', 'sec')
             self.p_featV[idx].showGrid(x=True, y=True, alpha=0.7)
             # self.p_featV[idx].setXRange(0, 200)
             self.curve_featV.append(self.p_featV[idx].plot(pen=(255, 0, 0, 100)))
+            self.curve_featV[idx].id = idx
             self.infline_featV.append(pg.InfiniteLine(pen=(0, 0, 0), movable=True, hoverPen=(0, 0, 255)))
             self.infline_featV[idx].sigPositionChangeFinished.connect(self.infline_changed)
             self.p_featV[idx].addItem(self.infline_featV[idx])
+
+            #region
+            self.p_featV[idx].region_featV = []
+
             self.w_plot_feat.nextRow()
 
         self.scroll.setWidget(self.w_plot_feat)
@@ -232,6 +246,24 @@ class audio_check(QG.QMainWindow):
         # print(infline.pos()[0])
         # print(pos)
         self.infline_pos = int(pos)
+
+    def show_region(self):
+        self.region_id += 1
+        region_id = self.region_id
+        self.region_wavV.append(pg.LinearRegionItem())
+        region_wav = self.region_wavV[region_id]
+        region_wav.
+        self.p_wav.addItem(region_wav)
+
+        for idx in range(34):
+            self.p_featV[idx].region_featV.append(pg.LinearRegionItem())
+            region_feat = self.p_featV[idx].region_featV[region_id]
+            self.p_featV[idx].addItem(region_feat)
+
+    def update_region(self):
+        pass
+
+
 
 def main():
     app = QG.QApplication(sys.argv)
