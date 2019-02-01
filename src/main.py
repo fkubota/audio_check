@@ -39,6 +39,7 @@ class audio_check(QG.QMainWindow):
         self.region_wavV = []
         self.region_id = -1
         self.region_specV = []
+        self.latest_region_pos = [0, 1]
 
 
         # widget
@@ -62,29 +63,44 @@ class audio_check(QG.QMainWindow):
         self.w_plot_wav = pg.GraphicsWindow()
         self.w_plot_wav.setFixedHeight(200)
         self.w_plot_wav.setBackground('#FFFFFF00')
+        # self.w_plot_wav.setBackground('#BBBBBB')
         self.p_wav = self.w_plot_wav.addPlot()
         self.p_wav.setLabel('bottom', 'Time', 'sec')
         self.p_wav.showGrid(x=True, y=True, alpha=0.7)
-        self.curve_wav = self.p_wav.plot(pen=(255, 0, 0, 50))
-        self.infline_wav = pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255))
+        # self.curve_wav = self.p_wav.plot(pen=(255, 0, 0, 50))
+        self.curve_wav = self.p_wav.plot(pen=('#0F8EBB50'))
+        self.infline_wav = pg.InfiniteLine(pen=(255, 0, 0), movable=True, hoverPen=(0, 0, 255))
         self.infline_wav.me = 'wav'
         self.infline_wav.sigPositionChangeFinished.connect(self.infline_changed)
         self.p_wav.addItem(self.infline_wav)
 
+        def onClick(event):
+            items = self.w_plot_wav.scene().items(event.scenePos())
+            region = items[0]
+            if 'LinearRegion' in str(region):
+                left, right = region.getRegion()
+                self.latest_region_pos = [left, right]
+        self.w_plot_wav.scene().sigMouseClicked.connect(onClick)
 
         # graph_feat
         self.w_plot_feat = pg.GraphicsWindow()
         self.w_plot_feat.resize(1000, 6000)
         self.w_plot_feat.setBackground('#FFFFFF00')
+        # view = QG.QGraphicsLayout()
+        # self.w_plot_feat.setCentralWidget(view)
+        self.w_plot_feat.setStyleSheet("background-color: pink;")
+
         for idx in range(34):
             self.p_featV.append(self.w_plot_feat.addPlot())
+            # self.p_featV.append(view.addPlot())
             self.p_featV[idx].setLabel('bottom', 'Time', 'sec')
             self.p_featV[idx].showGrid(x=True, y=True, alpha=0.7)
             self.p_featV[idx].setLabels(left=feat_name[idx])
             # self.p_featV[idx].setXRange(0, 200)
-            self.curve_featV.append(self.p_featV[idx].plot(pen=(255, 0, 0, 100)))
+            # self.curve_featV.append(self.p_featV[idx].plot(pen=(255, 0, 0, 100)))
+            self.curve_featV.append(self.p_featV[idx].plot(pen=('#0F8EBB50')))
             self.curve_featV[idx].id = idx
-            self.infline_featV.append(pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255)))
+            self.infline_featV.append(pg.InfiniteLine(pen=(255, 0, 0), movable=True, hoverPen=(0, 0, 255)))
             self.infline_featV[idx].sigPositionChangeFinished.connect(self.infline_changed)
             self.infline_featV[idx].me = 'feat'
             self.p_featV[idx].addItem(self.infline_featV[idx])
@@ -95,6 +111,14 @@ class audio_check(QG.QMainWindow):
             self.w_plot_feat.nextRow()
 
         self.scroll.setWidget(self.w_plot_feat)
+        # self.www = QG.QWidget()
+        # self.h = QG.QHBoxLayout()
+        # self.h.addWidget(self.w_plot_feat)
+        # self.www.setLayout(self.h)
+        # self.www.setFixedHeight(6000)
+        # self.www.setSizePolicy(QG.QSizePolicy.Fixed, QG.QSizePolicy.Expanding)
+        # self.scroll.setWidget(self.www)
+
         self.hbox_plot_feat = QG.QHBoxLayout()
         self.hbox_plot_feat.addWidget(self.scroll)
 
@@ -104,7 +128,7 @@ class audio_check(QG.QMainWindow):
         self.w_spec.resize(1000, 300)
         self.imv = pg.ImageView()
         self.imv.getView().setAspectLocked(False)
-        self.infline_spec = pg.InfiniteLine(pen=(0, 255, 0), movable=True, hoverPen=(0, 0, 255))
+        self.infline_spec = pg.InfiniteLine(pen=(255, 0, 0), movable=True, hoverPen=(0, 0, 255))
         self.infline_spec.me = 'spec'
         self.infline_spec.sigPositionChangeFinished.connect(self.infline_changed)
         self.imv.addItem(self.infline_spec)
@@ -163,6 +187,7 @@ class audio_check(QG.QMainWindow):
         self.toolber.addAction(self.add_region_wav)
         self.toolber.addAction(self.add_spec)
         self.toolber.addAction(self.label_export)
+
 
 
     def play(self):
@@ -258,10 +283,10 @@ class audio_check(QG.QMainWindow):
         y = self.wav_file.readframes(self.wav_file.getnframes())
         # print(3, len(y))
         y = np.frombuffer(y, dtype='int16')
-        print(y.shape)
+        # print(y.shape)
         # print(4, len(y))
         y = y[::int(44100/4)]
-        print(y.shape)
+        # print(y.shape)
         # print(5, len(y))
         x = np.arange(0, len(y))/4
         self.curve_wav.setData(x, y)
@@ -295,11 +320,11 @@ class audio_check(QG.QMainWindow):
             spec = pickle.load(f).T[:,::-1]
 
         self.imv.setImage(spec)
-        print(spec.shape)
+        # print(spec.shape)
 
 
     def infline_changed(self):
-        print('ok')
+        # print('ok')
         infline = self.sender()
         name = infline.me
         pos = infline.pos()[0]
@@ -318,17 +343,24 @@ class audio_check(QG.QMainWindow):
     def show_region(self):
         self.region_id += 1
         region_id = self.region_id
+        left = self.latest_region_pos[0]
+        right = self.latest_region_pos[1]
+        dif = right - left
+        left = left + dif + 2
+        right= right + dif + 2
 
         # wav
-        self.region_wavV.append(pg.LinearRegionItem())
+        self.region_wavV.append(pg.LinearRegionItem(brush='DAFF3710'))#,pen='#BD9D32'))
         region_wav = self.region_wavV[region_id]
+        region_wav.setRegion([left, right])
         region_wav.me = 'wav'
         region_wav.id = region_id
         region_wav.sigRegionChanged.connect(self.update_region)
         self.p_wav.addItem(region_wav)
 
+
         # spec
-        self.region_specV.append(pg.LinearRegionItem())
+        self.region_specV.append(pg.LinearRegionItem(brush='DAFF3710'))
         region_spec = self.region_specV[region_id]
         region_spec.me = 'spec'
         region_spec.id = region_id
@@ -337,7 +369,7 @@ class audio_check(QG.QMainWindow):
 
         # feat
         for idx in range(34):
-            self.p_featV[idx].region_featV.append(pg.LinearRegionItem())
+            self.p_featV[idx].region_featV.append(pg.LinearRegionItem(brush='DAFF3710'))
             region_feat = self.p_featV[idx].region_featV[region_id]
             region_feat.me = 'feat'
             region_feat.id = region_id
@@ -396,6 +428,16 @@ class audio_check(QG.QMainWindow):
         save_path = QG.QFileDialog.getSaveFileName(self, "Save File")  # 保存するファイル名を取得。
         with open(save_path + '.pkl', mode='wb') as f:
             pickle.dump(A, f)
+
+    # def mousePressEvent(self, QMouseEvent):
+    #     print(self.sender)
+    #     try:
+    #         print(self.sender)
+    #     except:
+    #         print('except')
+    #     pass
+
+
 
 
 def main():
