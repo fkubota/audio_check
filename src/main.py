@@ -346,8 +346,8 @@ class audio_check(QG.QMainWindow):
         left = self.latest_region_pos[0]
         right = self.latest_region_pos[1]
         dif = right - left
-        left = left + dif + 2
-        right= right + dif + 2
+        left = left + dif
+        right= right + dif
 
         # wav
         self.region_wavV.append(pg.LinearRegionItem(brush='DAFF3710'))#,pen='#BD9D32'))
