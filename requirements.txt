@@ -1,0 +1,6 @@
+numpy==1.16.1
+pandas==0.24.1
+PyAudio==0.2.11
+pydub==0.23.1
+pygame==1.9.4
+pyqtgraph==0.10.0
