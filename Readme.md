@@ -10,6 +10,11 @@ sudo apt-get install pyqt4-dev-tools
 sudo apt-get install pyqt4.qsci-dev
 ```
 
+install python package:
+```
+pip install --require requirements.txt
+```
+
 install pyaudio
 ```
 sudo apt-get install portaudio19-dev
