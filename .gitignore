@@ -9,14 +9,6 @@
 
 *.pkg
 
-app/build/main/PYZ-00\.pyz
-
-app/build/main/warn-main\.txt
-
-app/build/main/xref-main\.html
-
-app/dist/main
-
 src/__pycache__/main\.cpython-36\.pyc
 
 src/app\.tar\.xz
