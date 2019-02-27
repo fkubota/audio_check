@@ -47,14 +47,19 @@ class audio_check(QG.QMainWindow):
         self.setCentralWidget(self.w0)
         self.lbl0 = QG.QLabel('wav')
         self.lbl1 = QG.QLabel('feat')
+        self.lbl2 = QG.QLabel('label')
         self.le0 = QG.QLineEdit()
         self.le1 = QG.QLineEdit()
+        self.le2 = QG.QLineEdit()
         self.btn0 = QG.QPushButton('...')
         self.btn0.setFixedWidth(30)
         self.btn0.clicked.connect(self.get_path_wav)
         self.btn1 = QG.QPushButton('...')
         self.btn1.setFixedWidth(30)
         self.btn1.clicked.connect(self.get_path_feat)
+        self.btn2 = QG.QPushButton('...')
+        self.btn2.setFixedWidth(30)
+        self.btn2.clicked.connect(self.get_path_label)
         self.btn_play_stop = QG.QPushButton('Play')
         self.btn_play_stop.clicked.connect(self.thread)
         self.scroll = QG.QScrollArea()
@@ -69,6 +74,8 @@ class audio_check(QG.QMainWindow):
         self.p_wav.showGrid(x=True, y=True, alpha=0.7)
         # self.curve_wav = self.p_wav.plot(pen=(255, 0, 0, 50))
         self.curve_wav = self.p_wav.plot(pen=('#0F8EBB50'))
+        self.scatter = pg.ScatterPlotItem()
+        self.p_wav.addItem(self.scatter)
         self.infline_wav = pg.InfiniteLine(pen=(255, 0, 0), movable=True, hoverPen=(0, 0, 255))
         self.infline_wav.me = 'wav'
         self.infline_wav.sigPositionChangeFinished.connect(self.infline_changed)
@@ -88,7 +95,7 @@ class audio_check(QG.QMainWindow):
         self.w_plot_feat.setBackground('#FFFFFF00')
         # view = QG.QGraphicsLayout()
         # self.w_plot_feat.setCentralWidget(view)
-        self.w_plot_feat.setStyleSheet("background-color: pink;")
+        # self.w_plot_feat.setStyleSheet("background-color: pink;")
 
         for idx in range(34):
             self.p_featV.append(self.w_plot_feat.addPlot())
@@ -164,11 +171,16 @@ class audio_check(QG.QMainWindow):
         self.hbox2.addWidget(self.lbl1)
         self.hbox2.addWidget(self.le1)
         self.hbox2.addWidget(self.btn1)
+        self.hbox3 = QG.QHBoxLayout()
+        self.hbox3.addWidget(self.lbl2)
+        self.hbox3.addWidget(self.le2)
+        self.hbox3.addWidget(self.btn2)
         self.vbox0 = QG.QVBoxLayout()
         self.vbox0.addLayout(self.hbox0)
         self.vbox0.addLayout(self.hbox_plot_feat)
         self.vbox0.addLayout(self.hbox1)
         self.vbox0.addLayout(self.hbox2)
+        self.vbox0.addLayout(self.hbox3)
         self.vbox0.addWidget(self.btn_play_stop)
         self.w0.setLayout(self.vbox0)
 
@@ -290,6 +302,18 @@ class audio_check(QG.QMainWindow):
         # print(5, len(y))
         x = np.arange(0, len(y))/4
         self.curve_wav.setData(x, y)
+        # try:
+        #     self.scatter.setData(x[self.label==1], y[self.label==1], pen='r')
+        #     print('kita!')
+        # except:
+        #     pass
+
+        max_val = np.max(y)
+        x_scatter = np.arange(0, len(self.label)) /4
+        y_scatter = np.ones(len(self.label)) *max_val*(1+0.1)
+        self.scatter.setData(x_scatter[self.label==1], y_scatter[self.label==1], pen='00000000', brush='FF000030')
+
+
         self.wav_file.close()
 
         thread_obj2 = threading.Thread(target=self.play)
@@ -301,7 +325,7 @@ class audio_check(QG.QMainWindow):
         # self.feat_path = '../data/sample.pkl'
         self.le1.setText(self.feat_path)
         with open(self.feat_path, mode='rb') as f:
-            self.feat = pickle.load(f)
+            self.feat = np.array(pickle.load(f))
         try:
             self.feat = self.feat['data']
         except:
@@ -310,6 +334,16 @@ class audio_check(QG.QMainWindow):
             x = np.arange(0, len(self.feat[:, idx]))/4
             self.curve_featV[idx].setData(x, self.feat[:, idx])
             self.p_featV[idx].setXLink(self.p_featV[0])
+
+    def get_path_label(self):
+        self.label_path = QG.QFileDialog.getOpenFileName(self, 'Get Label File', '/home/')
+        self.le2.setText(self.label_path)
+        with open(self.label_path, mode='rb') as f:
+            self.label = pickle.load(f)
+        # x = np.arange(0, len(self.label))*0.25
+        # self.bar = pg.BarGraphItem(x=x, y=0, height=self.label*2000, width=0.25, brush='FF000030')
+        # self.p_wav.addItem(self.bar)
+
 
     def get_path_spec(self):
         # spec_path = '/home/fkubota/Python/app/audio_check/data/fromHoshinosan/sample_for_testing01_20181214_113823_002301-002317_right_ssft_HI-RES.pkl'
