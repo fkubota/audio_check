@@ -12,6 +12,7 @@ import pandas as pd
 import pyqtgraph as pg
 import pickle
 import pygame
+from pydub import AudioSegment
 # region
 import time
 import pydub
@@ -27,6 +28,9 @@ feat_name = ['zcr','energy','energy_entropy','spectral_centroid','spectral_sprea
 class audio_check(QG.QMainWindow):
     def __init__(self, parent = None):
         super(audio_check, self).__init__(parent)  # superclassのコンストラクタを使用。
+        self.feat = []
+        self.label = []
+        self.sample_rate = 0
 
         self.resize(600, 600)
 
@@ -287,6 +291,10 @@ class audio_check(QG.QMainWindow):
     def get_path_wav(self):
         self.wav_path = QG.QFileDialog.getOpenFileName(self, 'Get Wav File', '/home/')
         # self.wav_path = '../data/test/window_broken.wav'
+
+        audio = AudioSegment.from_wav(self.wav_path)
+        self.sample_rate = audio.frame_rate
+
         self.le0.setText(self.wav_path)
 
         self.wav_file = wave.open(self.wav_path, 'rb')
@@ -295,9 +303,7 @@ class audio_check(QG.QMainWindow):
         y = self.wav_file.readframes(self.wav_file.getnframes())
         # print(3, len(y))
         y = np.frombuffer(y, dtype='int16')
-        # print(y.shape)
-        # print(4, len(y))
-        y = y[::int(44100/4)]
+        y = y[::int(self.sample_rate/4)]
         # print(y.shape)
         # print(5, len(y))
         x = np.arange(0, len(y))/4
@@ -308,11 +314,11 @@ class audio_check(QG.QMainWindow):
         # except:
         #     pass
 
-        max_val = np.max(y)
-        x_scatter = np.arange(0, len(self.label)) /4
-        y_scatter = np.ones(len(self.label)) *max_val*(1+0.1)
-        self.scatter.setData(x_scatter[self.label==1], y_scatter[self.label==1], pen='00000000', brush='FF000030')
-
+        if len(self.label)!=0:
+            max_val = np.max(y)
+            x_scatter = np.arange(0, len(self.label)) /4
+            y_scatter = np.ones(len(self.label)) *max_val*(1+0.1)
+            self.scatter.setData(x_scatter[self.label==1], y_scatter[self.label==1], pen='00000000', brush='FF000030')
 
         self.wav_file.close()
 
@@ -323,16 +329,21 @@ class audio_check(QG.QMainWindow):
     def get_path_feat(self):
         self.feat_path = QG.QFileDialog.getOpenFileName(self, 'Get Feature File', '/home/')
         # self.feat_path = '../data/sample.pkl'
-        self.le1.setText(self.feat_path)
-        with open(self.feat_path, mode='rb') as f:
-            self.feat = np.array(pickle.load(f))
         try:
-            self.feat = self.feat['data']
+            self.feat = pd.read_csv(self.feat_path)
         except:
-            pass
+            return
+        self.le1.setText(self.feat_path)
+        # with open(self.feat_path, mode='rb') as f:
+        #     self.feat = np.array(pickle.load(f))
+        # try:
+        #     self.feat = self.feat['data']
+        # except:
+        #     pass
+
         for idx in range(34):
-            x = np.arange(0, len(self.feat[:, idx]))/4
-            self.curve_featV[idx].setData(x, self.feat[:, idx])
+            x = np.arange(0, len(self.feat.iloc[:, idx]))/4
+            self.curve_featV[idx].setData(x, self.feat.iloc[:, idx])
             self.p_featV[idx].setXLink(self.p_featV[0])
 
     def get_path_label(self):
