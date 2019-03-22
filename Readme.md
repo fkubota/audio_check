@@ -12,7 +12,7 @@ sudo apt-get install pyqt5.qsci-dev
 
 install python package:
 ```
-pip install --r requirements.txt
+pip install -r requirements.txt
 ```
 
 install pyaudio
