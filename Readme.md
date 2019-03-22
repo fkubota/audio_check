@@ -4,15 +4,15 @@
 
 install system package(python3):
 ```
-sudo apt-get install python3-pyqt4
-sudo apt-get install libqt4-dev
-sudo apt-get install pyqt4-dev-tools
-sudo apt-get install pyqt4.qsci-dev
+sudo apt-get install python3-pyqt5
+sudo apt-get install libqt5-dev
+sudo apt-get install pyqt5-dev-tools
+sudo apt-get install pyqt5.qsci-dev
 ```
 
 install python package:
 ```
-pip install --require requirements.txt
+pip install -r requirements.txt
 ```
 
 install pyaudio
