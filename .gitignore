@@ -20,3 +20,9 @@ src/app\.tar\.xz
 src/build/main/warn-main\.txt
 
 *.html
+
+src/demo/__pycache__/
+
+src/demo/build/demo/
+
+src/demo/
