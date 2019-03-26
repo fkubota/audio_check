@@ -222,8 +222,8 @@ class audio_check(QG.QMainWindow):
         self.btn_play_stop.setText('Play')
 
 
-        pygame.mixer.init()
         pygame.init()
+        pygame.mixer.init()
         pygame.mixer.music.load(filename_ogg) #音源を読み込み
         # mp3_length = mp3(filename).info.length #音源の長さ取得
         # pygame.mixer.music.play(1) #再生開始。1の部分を変えるとn回再生(その場合は次の行の秒数も×nすること)
