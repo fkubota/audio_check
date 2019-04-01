@@ -30,7 +30,8 @@ class audio_check(QG.QMainWindow):
         super(audio_check, self).__init__(parent)  # superclassのコンストラクタを使用。
         self.feat = []
         self.label = []
-        self.sample_rate = 0
+        self.sample_rate_wav = 0
+        self.sample_rate_feat = 4
 
         self.resize(600, 600)
 
@@ -52,9 +53,12 @@ class audio_check(QG.QMainWindow):
         self.lbl0 = QG.QLabel('wav')
         self.lbl1 = QG.QLabel('feat')
         self.lbl2 = QG.QLabel('label')
+        self.lbl_sr_feat = QG.QLabel('feat_sample_rate')
         self.le0 = QG.QLineEdit()
         self.le1 = QG.QLineEdit()
         self.le2 = QG.QLineEdit()
+        self.le_feat_sample_rate = QG.QLineEdit(str(self.sample_rate_feat))
+        self.le_feat_sample_rate.setFixedWidth(40)
         self.btn0 = QG.QPushButton('...')
         self.btn0.setFixedWidth(30)
         self.btn0.clicked.connect(self.get_path_wav)
@@ -175,6 +179,8 @@ class audio_check(QG.QMainWindow):
         self.hbox2.addWidget(self.lbl1)
         self.hbox2.addWidget(self.le1)
         self.hbox2.addWidget(self.btn1)
+        self.hbox2.addWidget(self.lbl_sr_feat)
+        self.hbox2.addWidget(self.le_feat_sample_rate)
         self.hbox3 = QG.QHBoxLayout()
         self.hbox3.addWidget(self.lbl2)
         self.hbox3.addWidget(self.le2)
@@ -294,7 +300,7 @@ class audio_check(QG.QMainWindow):
         # self.wav_path = '../data/test/window_broken.wav'
 
         audio = AudioSegment.from_wav(self.wav_path)
-        self.sample_rate = audio.frame_rate
+        self.sample_rate_wav = audio.frame_rate
 
         self.le0.setText(self.wav_path)
 
@@ -304,10 +310,12 @@ class audio_check(QG.QMainWindow):
         y = self.wav_file.readframes(self.wav_file.getnframes())
         # print(3, len(y))
         y = np.frombuffer(y, dtype='int16')
-        y = y[::int(self.sample_rate/4)]
+        # y = y[::int(self.sample_rate_wav/4)]
+        y = y[::int(self.sample_rate_wav / self.sample_rate_feat)]
         # print(y.shape)
         # print(5, len(y))
-        x = np.arange(0, len(y))/4
+        # x = np.arange(0, len(y))/4
+        x = np.arange(0, len(y)) / self.sample_rate_feat
         self.curve_wav.setData(x, y)
         # try:
         #     self.scatter.setData(x[self.label==1], y[self.label==1], pen='r')
@@ -317,7 +325,8 @@ class audio_check(QG.QMainWindow):
 
         if len(self.label)!=0:
             max_val = np.max(y)
-            x_scatter = np.arange(0, len(self.label)) /4
+            # x_scatter = np.arange(0, len(self.label)) /4
+            x_scatter = np.arange(0, len(self.label)) / self.sample_rate_feat
             y_scatter = np.ones(len(self.label)) *max_val*(1+0.1)
             self.scatter.setData(x_scatter[self.label==1], y_scatter[self.label==1], pen='00000000', brush='FF000030')
 
@@ -328,6 +337,7 @@ class audio_check(QG.QMainWindow):
 
 
     def get_path_feat(self):
+        self.sample_rate_feat = float(self.le_feat_sample_rate.text())
         self.feat_path = QG.QFileDialog.getOpenFileName(self, 'Get Feature File', '/home/')
         # self.feat_path = '../data/sample.pkl'
         try:
@@ -343,7 +353,8 @@ class audio_check(QG.QMainWindow):
         #     pass
 
         for idx in range(34):
-            x = np.arange(0, len(self.feat.iloc[:, idx]))/4
+            # x = np.arange(0, len(self.feat.iloc[:, idx]))/4
+            x = np.arange(0, len(self.feat.iloc[:, idx])) / self.sample_rate_feat
             self.curve_featV[idx].setData(x, self.feat.iloc[:, idx])
             self.p_featV[idx].setXLink(self.p_featV[0])
 
